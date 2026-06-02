@@ -3,8 +3,20 @@
           <div class="row">
             <div class="col-md-12">
               <div class="col-md-6 animate-box">
+                  <% if(typeof error === "string") {%>
+                  <div class="alert alert-danger"></div>
+                    <% error %>
+                    </div>
+                  <% } %>
+
+                  <% if(typeof success === "string") {%>
+                  <div class="alert alert-success"></div>
+                    <% success %>
+                    </div>
+                  <% } %>
+
                 <h3>Reserva de mesa</h3>
-                <form action="#">
+                <form action="/reservations" method="post">
                   <div class="row form-group">
                     <div class="col-md-12">
                       <label for="inputName">Nome</label>
@@ -13,6 +25,7 @@
                         id="inputName"
                         name="name"
                         class="form-control"
+                        value="<%= body.name %>"
                       />
                     </div>
                   </div>
@@ -24,6 +37,7 @@
                         id="inputEmail"
                         name="email"
                         class="form-control"
+                        value="<%= body.email %>"
                       />
                     </div>
                   </div>
@@ -36,11 +50,11 @@
                         class="form-control"
                       >
                         <option value="">-- selecione --</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5+</option>
+                        <option <% if(body.people == 1) { %selected<% } %> value="1">1</option>
+                        <option <% if(body.people == 2) { %selected<% } %> value="2">2</option>
+                        <option <% if(body.people == 3) { %selected<% } %> value="3">3</option>
+                        <option <% if(body.people == 4) { %selected<% } %> value="4">4</option>
+                        <option <% if(body.people == 5) { %selected<% } %> value="5">5+</option>
                       </select>
                     </div>
                   </div>
@@ -52,6 +66,7 @@
                         id="inputDate"
                         name="date"
                         class="form-control"
+                        value="<%= body.date %>"
                       />
                     </div>
                   </div>
@@ -63,6 +78,7 @@
                         id="inputTime"
                         name="time"
                         class="form-control"
+                        value="<%= body.time %>"
                       />
                     </div>
                   </div>
