@@ -1,10 +1,12 @@
+require('dotenv').config();
 //Criando a estrutura do Projeto
-
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var session = require('express-session');
+var redisStore = require('connect-redis')(session);
 
 var indexRouter = require('./routes/index');
 var adminRouter = require('./routes/admin');
@@ -15,6 +17,15 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+app.use(session({
+  store: new redisStore({
+    host: process.env.REDIS_HOST,
+    port: process.env.REDIS_PORT
+  }),
+  secret: process.env.SESSION_SECRET,
+  resave: true,
+  saveUninitialized: true
+}))
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
