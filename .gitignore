@@ -1,0 +1,4 @@
+node_modules/
+public/admin/bower_components/
+public/admin/node_modules/
+.env
