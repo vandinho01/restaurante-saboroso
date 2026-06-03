@@ -7,6 +7,7 @@ var router = express.Router();
 router.use(function(req, res, next){
     
     if( ['/login'].indexOf(req.url) === -1 && !req.session.user) {
+        
         res.redirect('/admin/login');
 
     } else{
@@ -16,15 +17,17 @@ router.use(function(req, res, next){
 });
 
 router.use(function(req, res, next){
-    req.menus = admin.getMenus(req);
 
+    req.menus = admin.getMenus(req);
     next();
+
 });
 
 router.get('/logout', function(req, res, next) {
-    delete req.session.user;
 
+    delete req.session.user;
     res.redirect('/admin/login');
+
 });
 
 router.get('/', function(req, res, next){
@@ -65,11 +68,15 @@ router.get('/login', function(req, res, next){
 });
 
 router.get('/contacts', function(req, res, next){
+
     res.render("admin/contacts", admin.getParams(req));
+    
 });
 
 router.get('/emails', function(req, res, next){
+
     res.render("admin/emails", admin.getParams(req));
+
 });
 
 router.get('/menus', function(req, res, next){
@@ -81,17 +88,27 @@ router.get('/menus', function(req, res, next){
         }));
 
     });
-    
+
+});
+
+router.post('/menus', function(req, res, next){
+
+    res.send(req.body);
+
 });
 
 router.get('/reservations', function(req, res, next){
+
     res.render("admin/reservations", admin.getParams(req, {
         date: {}
     }));
+
 });
 
 router.get('/users', function(req, res, next){
+
     res.render("admin/users", admin.getParams(req));
+
 });
 
 module.exports = router;
