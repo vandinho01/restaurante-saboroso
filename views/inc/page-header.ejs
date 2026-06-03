@@ -9,11 +9,10 @@
 
 	<div id="page">
 
-		<%- include('inc/header-menu') -%>
+		<%- include('header-menu') -%>
 
         <% if(typeof isHome === 'boolean' && isHome) { %>
-            <%- include('inc/header-index') -%>
+            <%- include('header-index') -%>
         <% } else{ %>
-            <%- include('inc/header') -%>
+            <%- include('header') -%>
         <% } %>
-

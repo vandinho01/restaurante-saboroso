@@ -1,17 +1,34 @@
 var express = require('express');
+var users = require('./../inc/users');
 var router = express.Router();
 
 router.get('/', function(req, res, next){
     res.render("admin/index");
 });
 
+router.post('/login', function(req, res, next){
+    if(!req.body.email){
+        users.render(req, res, 'Preencha o campo e-mail.');
+    } else if(!req.body.password) {
+        users.render(req, res, 'Preencha o campo senha.');
+    } else {
+
+        users.login(req.body.email, req.body.password).then(user => {
+
+            req.session.user = user;
+
+            res.redirect('/admin');
+
+        }).catch(err => {
+            users.render(req, res, err.message || err);
+        });
+    }
+});
+
 router.get('/login', function(req, res, next){
 
-    if(!req.session.views) req.session.views = 0;
+    users.render(req, res, null)
 
-    console.log(req.session.views++);
-
-    res.render("admin/login");
 });
 
 router.get('/contacts', function(req, res, next){
