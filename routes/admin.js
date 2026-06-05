@@ -32,7 +32,7 @@ router.get('/logout', function(req, res, next) {
 
 router.get('/', function(req, res, next){
 
-    admin.dashbord.then(data => {
+    admin.dashbord().then(data => {
         res.render("admin/index", admin.getParams(req, {
             data
         }));
@@ -43,13 +43,14 @@ router.get('/', function(req, res, next){
 });
 
 router.post('/login', function(req, res, next){
-    if(!req.body.email){
+    console.log(req.fields);
+    if(!req.fields.email){
         users.render(req, res, 'Preencha o campo e-mail.');
-    } else if(!req.body.password) {
+    } else if(!req.fields.password) {
         users.render(req, res, 'Preencha o campo senha.');
     } else {
 
-        users.login(req.body.email, req.body.password).then(user => {
+        users.login(req.fields.email, req.fields.password).then(user => {
 
             req.session.user = user;
 
