@@ -94,13 +94,17 @@ router.get('/menus', function(req, res, next){
 
 router.post('/menus', function(req, res, next){
 
+    console.log('>>> POST /menus chamado');
+    console.log('fields:', req.fields);
+    console.log('files:', req.files);
+
     menus.save(req.fields, req.files).then(results=>{
 
-        res.send(results);
+        res.json(results);
 
     }).catch(err=>{
-
-        res.send(err);
+        console.error('ERRO SAVE:', err);
+        res.status(500).json({ error: err.message || String(err) });
 
     });
 

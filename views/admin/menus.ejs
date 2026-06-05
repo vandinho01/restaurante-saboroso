@@ -171,13 +171,24 @@
 
       let formUpdate = document.querySelector('#modal-update form');
 
-      formUpdate.save().then(json=>{
-
+      formUpdate.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    let formData = new FormData(formUpdate);
+    
+    fetch('/admin/menus', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(json => {
+        console.log('SUCESSO:', json);
         window.location.reload();
-        
-      }).catch(err => {
-        console.log(err)
-      });
+    })
+    .catch(err => {
+        console.error('ERRO:', err);
+    });
+});
 
       [...document.querySelectorAll('.btn-update')].forEach(btn => {
 
