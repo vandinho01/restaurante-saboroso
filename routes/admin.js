@@ -94,10 +94,6 @@ router.get('/menus', function(req, res, next){
 
 router.post('/menus', function(req, res, next){
 
-    console.log('>>> POST /menus chamado');
-    console.log('fields:', req.fields);
-    console.log('files:', req.files);
-
     menus.save(req.fields, req.files).then(results=>{
 
         res.json(results);
@@ -109,6 +105,18 @@ router.post('/menus', function(req, res, next){
     });
 
 });
+
+router.delete('/menus/:id', function(req, res, next){
+
+    menus.delete(req.params.id).then(results=>{
+
+        res.send(results)
+
+    }).catch(err => {
+        res.send(err);
+    });
+
+})
 
 router.get('/reservations', function(req, res, next){
 
