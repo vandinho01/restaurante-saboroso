@@ -215,94 +215,13 @@
 
     <script src="/js/moment.min.js"></script>
     <script src="/js/hcode-formsave.js"></script>
+    <script src="/js/hcode-grid.js"></script>
     <script>
 
-      let formCreate = document.querySelector('#modal-create form');
+      new HcodeGrid({
 
-      formCreate.save().then(json => {
-        window.location.reload();
-      }).catch(err => {
-        console.log(err)
-      });
-
-      let formUpdate = document.querySelector('#modal-update form');
-
-      formUpdate.addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        let formData = new FormData(formUpdate);
-
-        fetch('/admin/reservations', {
-          method: 'POST',
-          body: formData
-        })
-          .then(response => response.json())
-          .then(json => {
-            console.log('SUCESSO:', json);
-            window.location.reload();
-          })
-          .catch(err => {
-            console.error('ERRO:', err);
-          });
-      });
-
-      [...document.querySelectorAll('.btn-update')].forEach(btn => {
-
-        btn.addEventListener('click', e => {
-
-          let tr = (e.composedPath() || e.path).find(el => {
-
-            return (el.tagName.toUpperCase() === 'TR');
-
-          });
-
-          let data = JSON.parse(tr.dataset.row);
-
-          for (let name in data) {
-            let input = formUpdate.querySelector(`[name=${name}]`);
-
-            switch (name) {
-
-              case 'date':
-                if (input) input.value = moment(data[name]).format('YYYY-MM-DD');
-                break;
-
-              default:
-                if (input) input.value = data[name];
-
-            }
-
-          }
-
-          $('#modal-update').modal('show')
-
-        });
-
-      });
-
-      [...document.querySelectorAll('.btn-delete')].forEach(btn => {
-
-        btn.addEventListener('click', e => {
-
-          let tr = (e.composedPath() || e.path).find(el => {
-
-            return (el.tagName.toUpperCase() === 'TR');
-
-          });
-
-          let data = JSON.parse(tr.dataset.row);
-
-          if (confirm(`Deseja realmente excluir a reserva de ${data.name}?`)) {
-
-            fetch(`/admin/reservations/${data.id}`, {
-              method: 'DELETE'
-            }).then(response => response.json()).then(json => {
-              window.location.reload();
-            });
-
-          }
-
-        });
+        deleteUrl: '/admin/reservations/${data.id}',
+        deleteMsg: 'Deseja realmente excluir a reserva de ${data.name}?'
 
       });
 
