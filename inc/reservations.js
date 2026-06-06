@@ -6,37 +6,62 @@ module.exports = {
       title: "Reservas - Restaurante Saboroso!",
       background: "images/img_bg_2.jpg",
       h1: "Reserve uma mesa!",
-      body: req.body,
+      body: req.fields || {},
       error,
-      sucess
+      success  // ← era "sucess" (typo)
     });
   },
 
   save(fields) {
 
     return new Promise ((resolve, reject) => {
+      //se for array, pega o primeiro elemento; se já for string, usa direto
+      let date = Array.isArray(fields.date) ? fields.date[0] : fields.date;
+      let name = Array.isArray(fields.name) ? fields.name[0] : fields.name;
+      let email = Array.isArray(fields.email) ? fields.email[0] : fields.email;
+      let people = Array.isArray(fields.people) ? fields.people[0] : fields.people;
+      let time = Array.isArray(fields.time) ? fields.time[0] : fields.time;
+      let id = Array.isArray(fields.id) ? fields.id[0] : fields.id;
 
-        let date = fields.date.split('/');
+      if(date && date.indexOf('/') > -1) {
+        let parts = date.split('/');
+        date = `${parts[2]}-${parts[1]}-${parts[0]}`;
+      }
 
-        fields.date = `${date[2]}-${date[1]}-${date[0]}`
+      let query, params = [name, email, people, date, time]; // ← people adicionado
 
-        conn.query(`
+      if(parseInt(id) > 0){
+
+        query = `UPDATE tb_reservations 
+        SET 
+          name = ?,
+          email = ?,
+          people = ?,
+          date = ?,
+          time = ?
+        WHERE id = ?
+          `;
+
+        params.push(id);
+
+      } else {
+
+        query = `
         INSERT INTO tb_reservations (name, email, people, date, time)
-        VALUES (?, ?, ?, ? , ?)
-        `, [
-            fields.name,
-            fields.email,
-            fields.date,
-            fields.time
-        ], (err, results) => {
+        VALUES (?, ?, ?, ?, ?)
+        `
 
-            if(err) {
-                reject(err);
-            } else {
-                resolve(results);
-            }
+      }
 
-        });
+      conn.query(query, params, (err, results) => {
+
+          if(err) {
+              reject(err);
+          } else {
+              resolve(results);
+          }
+
+      });
 
     });
 
