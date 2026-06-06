@@ -8,13 +8,13 @@ module.exports = {
       h1: "Reserve uma mesa!",
       body: req.fields || {},
       error,
-      success  // ← era "sucess" (typo)
+      success
     });
   },
 
   save(fields) {
 
-    return new Promise ((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       //se for array, pega o primeiro elemento; se já for string, usa direto
       let date = Array.isArray(fields.date) ? fields.date[0] : fields.date;
       let name = Array.isArray(fields.name) ? fields.name[0] : fields.name;
@@ -23,14 +23,14 @@ module.exports = {
       let time = Array.isArray(fields.time) ? fields.time[0] : fields.time;
       let id = Array.isArray(fields.id) ? fields.id[0] : fields.id;
 
-      if(date && date.indexOf('/') > -1) {
+      if (date && date.indexOf('/') > -1) {
         let parts = date.split('/');
         date = `${parts[2]}-${parts[1]}-${parts[0]}`;
       }
 
-      let query, params = [name, email, people, date, time]; // ← people adicionado
+      let query, params = [name, email, people, date, time];
 
-      if(parseInt(id) > 0){
+      if (parseInt(id) > 0) {
 
         query = `UPDATE tb_reservations 
         SET 
@@ -55,11 +55,11 @@ module.exports = {
 
       conn.query(query, params, (err, results) => {
 
-          if(err) {
-              reject(err);
-          } else {
-              resolve(results);
-          }
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results);
+        }
 
       });
 
@@ -83,5 +83,26 @@ module.exports = {
       );
     });
   },
+
+  delete(id) {
+
+    return new Promise((resolve, reject) => {
+
+      conn.query(`
+        DELETE FROM tb_reservations WHERE id = ?
+      `,
+        [id], (err, results) => {
+
+          if (err) {
+            reject(err);
+          } else {
+            resolve(results);
+          }
+
+        })
+
+    })
+
+  }
 
 };
