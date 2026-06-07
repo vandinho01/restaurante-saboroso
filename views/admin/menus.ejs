@@ -152,6 +152,7 @@
 
   <script src="/js/hcode-filereader.js"></script>
   <script src="/js/hcode-formsave.js"></script>
+  <script src="/js/hcode-grid.js"></script>
   
 
     <script>
@@ -159,95 +160,25 @@
       new HcodeFileReader("#modal-create [type=file]", "#modal-create img");
       new HcodeFileReader("#modal-update [type=file]", "#modal-update img");
 
-      let formCreate = document.querySelector('#modal-create form');
+      new HcodeGrid({
 
-      formCreate.save().then(json=>{
+        deleteUrl: '/admin/menus/${data.id}',
+        deleteMsg: 'Deseja realmente excluir o menu ${data.title}?',
+        onUpdateLoad: (formUpdate, name, data) => {
 
-        window.location.reload();
-        
-      }).catch(err => {
-        console.log(err)
-      });
+          let input = formUpdate.querySelector(`[name=${name}]`);
 
-      let formUpdate = document.querySelector('#modal-update form');
-
-      formUpdate.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    let formData = new FormData(formUpdate);
-    
-    fetch('/admin/menus', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(json => {
-        console.log('SUCESSO:', json);
-        window.location.reload();
-    })
-    .catch(err => {
-        console.error('ERRO:', err);
-    });
-});
-
-[...document.querySelectorAll('.btn-delete')].forEach(btn => {
-
-  btn.addEventListener('click' , e=>{
-
-    let tr = (e.composedPath() || e.path).find(el => {
-
-      return (el.tagName.toUpperCase() === 'TR');
-
-      });
-
-    let data = JSON.parse(tr.dataset.row);
-
-  if(confirm(`Deseja realmente excluir o menu ${data.title}?`)){
-
-    fetch(`/admin/menus/${data.id}`, {
-      method: 'DELETE'
-    }).then(response => response.json()).then(json => {
-      window.location.reload();
-    });
-
-  }
-
-
-  });
-
-});
-
-      [...document.querySelectorAll('.btn-update')].forEach(btn => {
-
-        btn.addEventListener('click', e => {
-
-          let tr = (e.composedPath() || e.path).find(el => {
-
-            return (el.tagName.toUpperCase() === 'TR');
-
-          });
-
-          let data = JSON.parse(tr.dataset.row);
-
-          for (let name in data) {
-
-            switch (name) {
+          switch (name) {
 
               case 'photo':
-                formUpdate.querySelector('img').src = '/'+data[name];
+              formUpdate.querySelector('img').src = '/' + data[name];
                 break;
-
               default:
-                let input = formUpdate.querySelector(`[name=${name}]`);
                 if (input) input.value = data[name];
-
-            }
 
           }
 
-          $('#modal-update').modal('show')
-
-        });
+        }
 
       });
 
