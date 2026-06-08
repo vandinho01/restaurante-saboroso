@@ -14,16 +14,16 @@ class HcodeGrid {
                 window.location.reload();
 
             },
-            afterFormCreate: (e)=>{
+            afterFormCreate: (e) => {
                 window.location.reload();
             },
-            afterFormUpdate: (e)=>{
+            afterFormUpdate: (e) => {
                 window.location.reload();
             },
-            afterFormCreateError: (e)=>{
+            afterFormCreateError: (e) => {
                 alert('Não foi possível enviar o formulário')
             },
-            afterFormUpdateError: (e)=>{
+            afterFormUpdateError: (e) => {
                 alert('Não foi possível enviar o formulário')
             }
 
@@ -33,13 +33,15 @@ class HcodeGrid {
         this.options = Object.assign({}, {
             formCreate: '#modal-create form',
             formUpdate: '#modal-update form',
-            btnUpdate: '.btn-update',
-            btnDelete: '.btn-delete',
-            onUpdateLoad: (form, name, data ) =>{
-                let input = form.querySelector('[name='+name+']');
+            btnUpdate: 'btn-update',
+            btnDelete: 'btn-delete',
+            onUpdateLoad: (form, name, data) => {
+                let input = form.querySelector('[name=' + name + ']');
                 if (input) input.value = data[name];
             }
         }, configs);
+
+        this.rows = [...document.querySelectorAll('table tbody tr')];
 
         this.initForms();
         this.initButtons();
@@ -49,51 +51,49 @@ class HcodeGrid {
 
     initForms() {
 
-        this.formCreate = document.querySelector(this.options.formCreate);
+    this.formCreate = document.querySelector(this.options.formCreate);
 
-        this.formCreate.save().then(json => {
-
+    this.formCreate.save({
+        success: () => {
             this.fireEvent('afterFormCreate');
-            
-        }).catch(err => {
+        },
+        failure: err => {
             this.fireEvent('afterFormCreateError');
             console.log(err)
+        }
+    });
+
+    this.formUpdate = document.querySelector(this.options.formUpdate);
+
+    let self = this; 
+    this.formUpdate.addEventListener('submit', function(e) {
+
+        e.preventDefault();
+
+        let formData = new FormData(this); 
+
+        fetch('/admin/reservations', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(json => {
+            self.fireEvent('afterFormUpdate'); 
+        })
+        .catch(err => {
+            self.fireEvent('afterFormUpdateError');
         });
+    });
 
-        this.formUpdate = document.querySelector(this.options.formCreate);
+}
 
-        this.formUpdate.addEventListener('submit', function (e) {
+    fireEvent(name, args) {
 
-            e.preventDefault();
-
-            let formData = new FormData(formUpdate);
-
-            fetch('/admin/reservations', {
-                method: 'POST',
-                body: formData
-            })
-                .then(response => response.json())
-                .then(json => {
-
-                    this.fireEvent('afterFormUpdate');
-
-                })
-                .catch(err => {
-
-                    this.fireEvent('afterFormUpdateError');
-
-                });
-        });
+        if (typeof this.options.listeners[name] === 'function') this.options.listeners[name].apply(this, args);
 
     }
 
-    fireEvent(name, agrs) {
-
-        if (typeof this.options.listener[name] === 'function') this.options.listeners[name].apply(this, args);
-
-    }
-
-    getTrData(e){
+    getTrData(e) {
 
         let tr = (e.composedPath() || e.path).find(el => {
 
@@ -106,50 +106,59 @@ class HcodeGrid {
 
     }
 
+    btnUpdateClick(e) {
+
+        this.fireEvent('beforeUpdateClick', [e]);
+
+        let data = this.getTrData(e);
+
+        for (let name in data) {
+
+            this.options.onUpdateLoad(this.formUpdate, name, data);
+
+        }
+
+        this.fireEvent('afterUpdateClick', [e]);
+
+    }
+
+    btnDeleteClick(e) {
+
+        this.fireEvent('beforeDeleteClick');
+
+        let data = this.getTrData(e);
+
+        if (confirm(eval('`' + this.options.deleteMsg + '`'))) {
+
+            fetch(eval('`' + this.options.deleteUrl + '`'), {
+                method: 'DELETE'
+            }).then(response => response.json()).then(json => {
+                this.fireEvent('afterDeleteClick');
+            });
+
+        }
+
+
+    }
+
     initButtons() {
 
-        [...document.querySelectorAll(this.options.btnUpdate)].forEach(btn => {
+        this.rows.forEach(row => {
 
-            btn.addEventListener('click', e => {
+            [...row.querySelectorAll('.btn')].forEach(btn => {
 
-                this.fireEvent('beforeUpdateClick', [e]);
+                btn.addEventListener('click', e => {
 
-                let data = this.getTrData(e);
+                    if (e.target.classList.contains(this.options.btnUpdate)) {
+                        this.btnUpdateClick(e);
+                    } else if (e.target.classList.contains(this.options.btnDelete)) {
+                        this.btnDeleteClick(e);
+                    } else {
+                        this.fireEvent('buttonClick', [e.target, this.getTrData(e), e]);
+                    }
 
-                for (let name in data) {
-
-                    this.options.onUpdateLoad(this.formUpdate, name, data);
-
-                }
-
-                this.fireEvent('afterUpdateClick', [e]);
-
-
-
+                });
             });
-
-        });
-
-        [...document.querySelectorAll(this.options.btnDelete)].forEach(btn => {
-
-            btn.addEventListener('click', e => {
-
-                this.fireEvent('beforeDeleteClick');
-
-                let data = this.getTrData(e);
-
-                if (confirm(eval('`' + this.options.deleteMsg + '`'))) {
-
-                    fetch(eval('`' + this.options.deleteUrl + '`'), {
-                        method: 'DELETE'
-                    }).then(response => response.json()).then(json => {
-                        this.fireEvent('afterDeleteClick');
-                    });
-
-                }
-
-            });
-
         });
 
     }

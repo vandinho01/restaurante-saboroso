@@ -110,6 +110,35 @@ module.exports = {
 
     })
 
+  },
+
+  changePassword(req) {
+    return new Promise((resolve, reject) => {
+
+      // Normaliza os campos — formidable v3+ retorna arrays, então pega o primeiro elemento se for array
+      let password = Array.isArray(req.fields.password) ? req.fields.password[0] : req.fields.password;
+      let passwordConfirm = Array.isArray(req.fields.passwordConfirm) ? req.fields.passwordConfirm[0] : req.fields.passwordConfirm;
+      let id = Array.isArray(req.fields.id) ? req.fields.id[0] : req.fields.id;
+
+      if (!password) {
+        reject('Preencha a senha');
+      } else if (password !== passwordConfirm) {
+        reject('Confirme a senha corretamente');
+      } else {
+
+        conn.query(`
+                UPDATE tb_users
+                SET password = ?
+                WHERE id = ?
+            `, [password, id], (err, results) => {
+          if (err) {
+            reject(err.message);
+          } else {
+            resolve(results);
+          }
+        });
+      }
+    });
   }
 
 };
