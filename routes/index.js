@@ -2,8 +2,8 @@ var conn = require('./../inc/db')
 var express = require('express');
 var menus = require('./../inc/menus');
 var reservations = require('./../inc/reservations');
-var reservations = require('./../inc/contacts');
 const contacts = require('./../inc/contacts');
+var emails = require('./../inc/emails');
 var router = express.Router();
 
 /* GET home page. */
@@ -98,6 +98,16 @@ router.get('/services', function(req, res, next){
     background: 'images/img_bg_1.jpg',
     h1: 'É um prazer poder servir!'
   });
+});
+
+router.post('/subscribe', function(req, res, next){
+
+  emails.save(req).then(results => {
+    res.json(results);
+  }).catch(err => {
+    res.json(err);
+  });
+
 });
 
 module.exports = router;
