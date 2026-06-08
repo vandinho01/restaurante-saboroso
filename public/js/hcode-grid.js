@@ -51,41 +51,40 @@ class HcodeGrid {
 
     initForms() {
 
-    this.formCreate = document.querySelector(this.options.formCreate);
+        this.formCreate = document.querySelector(this.options.formCreate);
 
-    this.formCreate.save({
-        success: () => {
-            this.fireEvent('afterFormCreate');
-        },
-        failure: err => {
-            this.fireEvent('afterFormCreateError');
-            console.log(err)
+        if (this.formCreate) {
+
+            this.formCreate.save({
+                success: () => {
+                    this.fireEvent('afterFormCreate');
+                },
+                failure: err => {
+                    this.fireEvent('afterFormCreateError');
+                    console.log(err)
+                }
+            });
         }
-    });
 
-    this.formUpdate = document.querySelector(this.options.formUpdate);
+        this.formUpdate = document.querySelector(this.options.formUpdate);
 
-    let self = this; 
-    this.formUpdate.addEventListener('submit', function(e) {
+        let self = this;
+        this.formUpdate = document.querySelector(this.options.formUpdate);
 
-        e.preventDefault();
+        if (this.formUpdate) {
 
-        let formData = new FormData(this); 
+            this.formUpdate.save({
+                success: () => {
+                    this.fireEvent('afterFormUpdate');
+                },
+                failure: () => {
+                    this.fireEvent('afterFormUpdateError');
+                }
+            });
 
-        fetch('/admin/reservations', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(json => {
-            self.fireEvent('afterFormUpdate'); 
-        })
-        .catch(err => {
-            self.fireEvent('afterFormUpdateError');
-        });
-    });
+        }
 
-}
+    }
 
     fireEvent(name, args) {
 
