@@ -2,67 +2,93 @@ let conn = require('./db');
 
 class Pagination {
 
-    constructor(
-
-        query,
-        params = [],
-        itensPerPage = 10
-
-    ){
-
+    constructor(query, params = [], itensPerPage = 10) {
         this.query = query;
         this.params = params;
         this.itensPerPage = itensPerPage;
         this.currentPage = 1;
-
     }
 
-    getPage(page){
+    getPage(page) {
 
-        this.currentPage = page - 1;
+        this.currentPage = parseInt(page);
 
-        this.params.push(
-            this.currentPage * this.itensPerPage,
+        let params = [...this.params]; 
+        params.push(
+            (this.currentPage - 1) * this.itensPerPage,
             this.itensPerPage
         );
 
-        return new Promise((resolve, reject)=>{
+        return new Promise((resolve, reject) => {
 
-            conn.query([this.query, 'SELECT FOUND_ROWS() AS FOUND_ROWS'].join(';'), this.params, (err, results)=>{
+            conn.query([this.query, 'SELECT FOUND_ROWS() AS FOUND_ROWS'].join(';'), params, (err, results) => {
 
-                if(err) {
+                if (err) {
                     reject(err);
                 } else {
-
                     this.data = results[0];
                     this.total = results[1][0].FOUND_ROWS;
                     this.totalPages = Math.ceil(this.total / this.itensPerPage);
-                    this.getCurrentPage++;
+
 
                     resolve(this.data);
                 }
             });
 
-        })
-
+        });
     }
 
-    getTotal(){
-
+    getTotal() {
         return this.total;
-
     }
 
-    getCurrentPage(){
-
+    getCurrentPage() {
         return this.currentPage;
-
     }
 
-    getTotalPages(){
-
+    getTotalPages() {
         return this.totalPages;
+    }
 
+    getNavigation(params) {
+
+        let limitPagesNav = 5;
+        let links = [];
+        let nrstart = 0;
+        let nrend = 0;
+
+        if (this.getTotalPages() < limitPagesNav) {
+            limitPagesNav = this.getTotalPages(); 
+        }
+
+        if ((this.getCurrentPage() - parseInt(limitPagesNav / 2)) < 1) {
+            nrstart = 1;
+            nrend = limitPagesNav;
+        } else if ((this.getCurrentPage() + parseInt(limitPagesNav)) > this.getTotalPages()) {
+            nrstart = this.getTotalPages() - limitPagesNav;
+            nrend = this.getTotalPages();
+        } else {
+            nrstart = this.getCurrentPage() - parseInt(limitPagesNav / 2);
+            nrend = this.getCurrentPage() + parseInt(limitPagesNav / 2);
+        }
+
+        for (let x = nrstart; x <= nrend; x++) {
+            links.push({
+                text: x,
+                href: '?' + this.getQueryString(Object.assign({}, params, { page: x })),
+                active: (x === this.getCurrentPage())
+            });
+        }
+
+        return links;
+    }
+
+    getQueryString(params) {
+        let queryString = [];
+        for (let name in params) {
+            queryString.push(`${name}=${params[name]}`);
+        }
+        return queryString.join('&');
     }
 
 }
