@@ -39,12 +39,11 @@
                         name="people"
                         class="form-control"
                       >
-                        <option value="">-- selecione --</option>
-                        <option <% if(body.people == 1) { %selected<% } %> value="1">1</option>
-                        <option <% if(body.people == 2) { %selected<% } %> value="2">2</option>
-                        <option <% if(body.people == 3) { %selected<% } %> value="3">3</option>
-                        <option <% if(body.people == 4) { %selected<% } %> value="4">4</option>
-                        <option <% if(body.people == 5) { %selected<% } %> value="5">5+</option>
+                        <option <% if(body.people == 1) { %>selected<% } %> value="1">1</option>
+                        <option <% if(body.people == 2) { %>selected<% } %> value="2">2</option>
+                        <option <% if(body.people == 3) { %>selected<% } %> value="3">3</option>
+                        <option <% if(body.people == 4) { %>selected<% } %> value="4">4</option>
+                        <option <% if(body.people == 5) { %>selected<% } %> value="5">5+</option>
                       </select>
                     </div>
                   </div>

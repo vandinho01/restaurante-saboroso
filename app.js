@@ -21,9 +21,6 @@ const redisClient = createClient({
 });
 redisClient.connect().catch(console.error);
 
-var indexRouter = require('./routes/index');
-var adminRouter = require('./routes/admin');
-
 var app = express();
 
 var http = http.Server(app);
@@ -31,9 +28,12 @@ var io = socket(http);
 
 io.on('connection', function(socket){
 
-
+  
 
 });
+
+var indexRouter = require('./routes/index')(io);
+var adminRouter = require('./routes/admin')(io);
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -46,6 +46,9 @@ app.use(session({
 }));
 
 app.use(function (req, res, next) {
+
+  req.body = {};
+
   if (req.method === 'POST') {
     var form = new formidable.IncomingForm({
       uploadDir: path.join(__dirname, '/public/images'),

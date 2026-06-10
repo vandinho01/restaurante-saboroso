@@ -53,34 +53,36 @@ module.exports = {
     });
   },
 
-  save(fields, files) {
+  save(fields) {
     return new Promise((resolve, reject) => {
 
-      let query, queryPhoto = '', params = [
-        fields.name,
-        fields.email,
-      ];
+      let id = Array.isArray(fields.id) ? fields.id[0] : fields.id;
+      let name = Array.isArray(fields.name) ? fields.name[0] : fields.name;
+      let email = Array.isArray(fields.email) ? fields.email[0] : fields.email;
+      let password = Array.isArray(fields.password) ? fields.password[0] : fields.password;
+
+      let query, params = [name, email];
 
       if (parseInt(id) > 0) {
 
         params.push(id);
 
         query = `
-        UPDATE tb_users
-        SET name = ?,
-            email = ?
-        WHERE id = ?
-    `;
+                UPDATE tb_users
+                SET name = ?, email = ?
+                WHERE id = ?
+            `;
 
       } else {
 
         query = `
-        INSERT INTO tb_users (name, email, password)
-        VALUES(?, ?, ?)
-    `;
-        params.push(fields.password);
+                INSERT INTO tb_users (name, email, password)
+                VALUES(?, ?, ?)
+            `;
+        params.push(password);
 
       }
+
       conn.query(query, params, (err, results) => {
         if (err) {
           reject(err);

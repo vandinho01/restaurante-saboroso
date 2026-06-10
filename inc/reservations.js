@@ -110,7 +110,7 @@ module.exports = {
     });
   },
 
-  chart(req){
+  chart(req) {
 
     return new Promise((resolve, reject) => {
 
@@ -124,37 +124,56 @@ module.exports = {
           GROUP BY YEAR(date), MONTH(date), CONCAT(YEAR(date), '-', MONTH(date))
           ORDER BY YEAR(date) ASC, MONTH(date) ASC
         `, [
-          req.query.start,
-          req.query.end
-        ], (err, results) => {
+        req.query.start,
+        req.query.end
+      ], (err, results) => {
 
-          if(err){
-            reject(err)
-          } else {
+        if (err) {
+          reject(err)
+        } else {
 
-            let months = [];
-            let values = [];
+          let months = [];
+          let values = [];
 
-            results.forEach(row=>{
-              
-              console.log(row.yearmonth, row.total, row.avg_people);
-              months.push(moment(row.yearmonth, 'YYYY-M').format('MMM YYYY'));
-              values.push(row.total);
+          results.forEach(row => {
 
-            });
+            console.log(row.yearmonth, row.total, row.avg_people);
+            months.push(moment(row.yearmonth, 'YYYY-M').format('MMM YYYY'));
+            values.push(row.total);
 
-            resolve({
-              months,
-              values
-            });
+          });
 
-          }
- 
+          resolve({
+            months,
+            values
+          });
+
         }
+
+      }
       );
 
     })
 
-  }
+  },
 
+  dashboard() {
+    return new Promise((resolve, reject) => {
+      conn.query(`
+        SELECT
+            (SELECT COUNT(*) FROM tb_contacts) AS nrcontacts,
+            (SELECT COUNT(*) FROM tb_menus) AS nrmenus,
+            (SELECT COUNT(*) FROM tb_reservations) AS nrreservations,
+            (SELECT COUNT(*) FROM tb_users) AS nrusers;
+    `, (err, results) => {
+
+        if(err){
+          reject(err);
+        } else {
+          resolve(results[0])
+        }
+
+      });
+    });
+  }
 };
