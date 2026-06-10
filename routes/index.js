@@ -4,6 +4,7 @@ var menus = require('./../inc/menus');
 var reservations = require('./../inc/reservations');
 const contacts = require('./../inc/contacts');
 var emails = require('./../inc/emails');
+var nodemailer = require('nodemailer');
 var router = express.Router();
 
 module.exports = function (io) {
@@ -84,16 +85,16 @@ module.exports = function (io) {
 
         try {
           const accountSid = process.env.TWILIO_ACCOUNT_SID;
-          const authToken  = process.env.TWILIO_AUTH_TOKEN;
+          const authToken = process.env.TWILIO_AUTH_TOKEN;
 
-          const content = 
-          `✅ *Nova Reserva - Restaurante Saboroso!*\n\n` +
-          `👤 Nome: ${req.body.name}\n` +
-          `📧 E-mail: ${req.body.email}\n` +
-          `👥 Pessoas: ${req.body.people}\n` +
-          `📅 Data: ${req.body.date}\n` +
-          `🕐 Hora: ${req.body.time}\n` +
-          `Te esperamos em breve!` 
+          const content =
+            `✅ *Nova Reserva - Restaurante Saboroso!*\n\n` +
+            `👤 Nome: ${req.body.name}\n` +
+            `📧 E-mail: ${req.body.email}\n` +
+            `👥 Pessoas: ${req.body.people}\n` +
+            `📅 Data: ${req.body.date}\n` +
+            `🕐 Hora: ${req.body.time}\n` +
+            `Te esperamos em breve!`
 
           const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
             method: 'POST',
@@ -102,7 +103,7 @@ module.exports = function (io) {
               'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`)
             },
             body: new URLSearchParams({
-              To:   process.env.TWILIO_WHATSAPP_TO,
+              To: process.env.TWILIO_WHATSAPP_TO,
               From: process.env.TWILIO_WHATSAPP_FROM,
               Body: content
             })
@@ -115,6 +116,43 @@ module.exports = function (io) {
           console.log('[ERRO Twilio]', err);
         }
 
+        // Envia e-mail de confirmação via Nodemailer
+        try {
+          const transporter = nodemailer.createTransport({
+            host: process.env.MAIL_HOST,
+            port: process.env.MAIL_PORT,
+            auth: {
+              user: process.env.MAIL_USER,
+              pass: process.env.MAIL_PASS
+            }
+          });
+
+          await transporter.sendMail({
+            from: process.env.MAIL_FROM,
+            to: req.body.email,
+            subject: 'Confirmação de Reserva - Restaurante Saboroso!',
+            html: `
+              <h2>✅ Reserva Confirmada!</h2>
+              <p>Olá, <strong>${req.body.name}</strong>! Sua reserva foi confirmada com sucesso.</p>
+              <h3>Detalhes:</h3>
+              <ul>
+                <li><strong>Nome:</strong> ${req.body.name}</li>
+                <li><strong>E-mail:</strong> ${req.body.email}</li>
+                <li><strong>Pessoas:</strong> ${req.body.people}</li>
+                <li><strong>Data:</strong> ${req.body.date}</li>
+                <li><strong>Hora:</strong> ${req.body.time}</li>
+              </ul>
+              <p>Aguardamos você!</p>
+            `
+          });
+
+          console.log('[EMAIL] Confirmação enviada para', req.body.email);
+
+        } catch (err) {
+          console.log('[ERRO Email]', err);
+        }
+
+
         req.body = {};
         io.emit('dashboard update');
         reservations.render(req, res, null, "Reserva realizada com sucesso!");
@@ -124,7 +162,7 @@ module.exports = function (io) {
       });
     }
 
-});
+  });
 
   router.get('/services', function (req, res, next) {
     res.render('services', {
