@@ -8,6 +8,8 @@ var logger = require('morgan');
 var session = require('express-session');
 var formidable = require('formidable');
 const { createClient } = require('redis');
+var http = require('http');
+var socket = require('socket.io');
 const { RedisStore } = require('connect-redis');
 
 const redisClient = createClient({
@@ -23,6 +25,15 @@ var indexRouter = require('./routes/index');
 var adminRouter = require('./routes/admin');
 
 var app = express();
+
+var http = http.Server(app);
+var io = socket(http);
+
+io.on('connection', function(socket){
+
+
+
+});
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -74,4 +85,9 @@ app.use(function (err, req, res, next) {
   res.render('error');
 });
 
-module.exports = app;
+http.listen(3000, function(){
+
+  console.log('Servidor em execução')
+
+})
+
