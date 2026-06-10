@@ -219,18 +219,49 @@ module.exports = function (io) {
 
     });
 
-    router.delete('/reservations/:id', function (req, res, next) {
+    //Na rota de cancelamento, quando for executada, adicionado o envio de mensagem
+    //informando sobre o cancelamento
+    router.delete('/reservations/:id', async function (req, res, next) {
 
-        reservations.delete(req.params.id).then(results => {
+    reservations.delete(req.params.id).then(async results => {
 
-            io.emit('dashboard update');
-            res.send(results);
+        try {
+            const accountSid = process.env.TWILIO_ACCOUNT_SID;
+            const authToken  = process.env.TWILIO_AUTH_TOKEN;
 
-        }).catch(err => {
-            res.send(err);
-        });
+            const content = 
+            `❌ *Reserva Cancelada - Restaurante Saboroso!*\n\n` +
+            `Sua reserva foi cancelada.\n` +
+            `Em caso de dúvidas, entre em contato conosco.`;
 
+            const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`)
+                },
+                body: new URLSearchParams({
+                    To: process.env.TWILIO_WHATSAPP_TO,
+                    From: process.env.TWILIO_WHATSAPP_FROM,
+                    Body: content
+                })
+            });
+
+            const data = await response.json();
+            console.log('[TWILIO RESPONSE]', response.status, JSON.stringify(data));
+
+        } catch (err) {
+            console.log('[ERRO Twilio]', err);
+        }
+
+        io.emit('dashboard update');
+        res.send(results);
+
+    }).catch(err => {
+        res.send(err);
     });
+
+});
 
 
     router.get('/users', function (req, res, next) {
