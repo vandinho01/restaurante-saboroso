@@ -67,7 +67,7 @@ module.exports = function (io) {
 
   });
 
-  router.post('/reservations', function (req, res, next) {
+  router.post('/reservations', async function (req, res, next) {
 
     if (!req.body.name) {
       reservations.render(req, res, 'Digite o nome');
@@ -80,21 +80,51 @@ module.exports = function (io) {
     } else if (!req.body.time) {
       reservations.render(req, res, 'Selecione a hora');
     } else {
-      reservations.save(req.body).then(results => {
+      reservations.save(req.body).then(async results => {
+
+        try {
+          const accountSid = process.env.TWILIO_ACCOUNT_SID;
+          const authToken  = process.env.TWILIO_AUTH_TOKEN;
+
+          const content = 
+          `✅ *Nova Reserva - Restaurante Saboroso!*\n\n` +
+          `👤 Nome: ${req.body.name}\n` +
+          `📧 E-mail: ${req.body.email}\n` +
+          `👥 Pessoas: ${req.body.people}\n` +
+          `📅 Data: ${req.body.date}\n` +
+          `🕐 Hora: ${req.body.time}\n` +
+          `Te esperamos em breve!` 
+
+          const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`)
+            },
+            body: new URLSearchParams({
+              To:   process.env.TWILIO_WHATSAPP_TO,
+              From: process.env.TWILIO_WHATSAPP_FROM,
+              Body: content
+            })
+          });
+
+          const data = await response.json();
+          console.log('[TWILIO RESPONSE]', response.status, JSON.stringify(data));
+
+        } catch (err) {
+          console.log('[ERRO Twilio]', err);
+        }
 
         req.body = {};
         io.emit('dashboard update');
         reservations.render(req, res, null, "Reserva realizada com sucesso!");
 
       }).catch(err => {
-
         reservations.render(req, res, err.message);
-
       });
-
     }
 
-  });
+});
 
   router.get('/services', function (req, res, next) {
     res.render('services', {
