@@ -6,6 +6,7 @@ var reservations = require('./../inc/reservations');
 var contacts = require('./../inc/contacts');
 var emails = require('./../inc/emails');
 var moment = require('moment');
+var nodemailer = require('nodemailer');
 var router = express.Router();
 
 
@@ -148,7 +149,7 @@ module.exports = function (io) {
     router.post('/menus', function (req, res, next) {
 
         menus.save(req.fields, req.files).then(results => {
-            
+
             io.emit('dashboard update');
             res.json(results);
 
@@ -223,45 +224,73 @@ module.exports = function (io) {
     //informando sobre o cancelamento
     router.delete('/reservations/:id', async function (req, res, next) {
 
-    reservations.delete(req.params.id).then(async results => {
+        reservations.delete(req.params.id).then(async results => {
 
-        try {
-            const accountSid = process.env.TWILIO_ACCOUNT_SID;
-            const authToken  = process.env.TWILIO_AUTH_TOKEN;
+            try {
+                const accountSid = process.env.TWILIO_ACCOUNT_SID;
+                const authToken = process.env.TWILIO_AUTH_TOKEN;
 
-            const content = 
-            `❌ *Reserva Cancelada - Restaurante Saboroso!*\n\n` +
-            `Sua reserva foi cancelada.\n` +
-            `Em caso de dúvidas, entre em contato conosco.`;
+                const content =
+                    `❌ *Reserva Cancelada - Restaurante Saboroso!*\n\n` +
+                    `Sua reserva foi cancelada.\n` +
+                    `Em caso de dúvidas, entre em contato conosco.`;
 
-            const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`)
-                },
-                body: new URLSearchParams({
-                    To: process.env.TWILIO_WHATSAPP_TO,
-                    From: process.env.TWILIO_WHATSAPP_FROM,
-                    Body: content
-                })
-            });
+                const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`)
+                    },
+                    body: new URLSearchParams({
+                        To: process.env.TWILIO_WHATSAPP_TO,
+                        From: process.env.TWILIO_WHATSAPP_FROM,
+                        Body: content
+                    })
+                });
 
-            const data = await response.json();
-            console.log('[TWILIO RESPONSE]', response.status, JSON.stringify(data));
+                const data = await response.json();
+                console.log('[TWILIO RESPONSE]', response.status, JSON.stringify(data));
 
-        } catch (err) {
-            console.log('[ERRO Twilio]', err);
-        }
+            } catch (err) {
+                console.log('[ERRO Twilio]', err);
+            }
 
-        io.emit('dashboard update');
-        res.send(results);
+            // Envia e-mail de confirmação via Nodemailer - Cancelamento
+            try {
+                const transporter = nodemailer.createTransport({
+                    host: process.env.MAIL_HOST,
+                    port: process.env.MAIL_PORT,
+                    auth: {
+                        user: process.env.MAIL_USER,
+                        pass: process.env.MAIL_PASS
+                    }
+                });
 
-    }).catch(err => {
-        res.send(err);
+                await transporter.sendMail({
+                    from: process.env.MAIL_FROM,
+                    to: req.body.email,
+                    subject: 'Cancelamento de reserva - Restaurante Saboroso!',
+                    html: `
+                      <h2>❌ *Reserva Cancelada - Restaurante Saboroso!</h2>
+                      <p>Sua reserva foi cancelada.\n</p>
+                      <p>Em caso de dúvidas, entre em contato conosco.</p>
+                    `
+                });
+
+                console.log('[EMAIL] Confirmação enviada para', req.body.email);
+
+            } catch (err) {
+                console.log('[ERRO Email]', err);
+            }
+
+            io.emit('dashboard update');
+            res.send(results);
+
+        }).catch(err => {
+            res.send(err);
+        });
+
     });
-
-});
 
 
     router.get('/users', function (req, res, next) {
